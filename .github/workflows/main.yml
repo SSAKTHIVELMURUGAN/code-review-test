@@ -34,50 +34,6 @@ jobs:
       - name: ⚙️ Install Dependencies with frappe-code install
         run: frappe-code install
 
-      - name: 🔍 Validate Only Changed Files (Exclude `node_modules`)
+      - name: 🔍 Validate Changed Files
         run: |
-          set -e  # Exit if any command fails
-          
-          # Determine changed files based on event type
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            # Fetch the base branch for PRs
-            git fetch origin ${{ github.base_ref }} --depth=1
-            CHANGED_FILES=$(git diff --name-only --diff-filter=d origin/${{ github.base_ref }}...HEAD)
-          else
-            # Fetch the last commit for push events
-            CHANGED_FILES=$(git diff --name-only --diff-filter=d HEAD~1 HEAD || true)
-          fi
-          
-          # Print all changed files (before filtering)
-          echo "📝 Changed Files Before Filtering:"
-          echo "$CHANGED_FILES"
-          
-          # Filter only relevant file types and exclude ignored directories
-          CHANGED_FILES=$(echo "$CHANGED_FILES" | grep -E '\.(py|js)$' | grep -vE '^(node_modules|venv|dist|build)/' || true)
-
-          # Print filtered files
-          echo "✅ Changed Files After Filtering (to validate):"
-          echo "$CHANGED_FILES"
-
-          if [ -z "$CHANGED_FILES" ]; then
-            echo "✅ No valid files changed, skipping validation."
-            exit 0
-          fi
-
-          PASSED=true
-          for file in $CHANGED_FILES; do
-            echo "🔍 Validating: $file"
-            if frappe-code validate-file "$file"; then
-              echo "✅ $file - PASSED"
-            else
-              echo "❌ $file - FAILED"
-              PASSED=false
-            fi
-          done
-
-          if [ "$PASSED" = false ]; then
-            echo "❌ Validation Failed!"
-            exit 1
-          else
-            echo "✅ All Files Passed!"
-          fi
+          git diff --name-only ${{ github.event.before }} ${{ github.sha }} | xargs -I {} frappe-code validate-file {}
