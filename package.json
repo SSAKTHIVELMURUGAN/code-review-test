@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "depcheck": "^1.4.7",
+    "jshint": "^2.13.6",
+    "jslint": "^0.12.1",
+    "license-checker": "^25.0.1",
+    "prettier": "^3.5.0",
+    "retire": "^5.2.5",
+    "snyk": "^1.1295.3"
+  }
+}
