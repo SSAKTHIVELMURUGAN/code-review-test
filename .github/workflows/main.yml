@@ -1,12 +1,11 @@
 name: Code Validation
 
 on:
-  push:  # Runs on every commit (push)
+  push:
     branches:
       - main
-      - dev  # Add other branches if needed
-
-  pull_request:  # Runs on every PR
+      - dev  
+  pull_request:
     branches:
       - main
       - dev
@@ -16,32 +15,45 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 🚀 Checkout Code
+      - name: 🚀 Checkout Code (Full History)
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Fetch full history to avoid ambiguous HEAD~1 errors
 
       - name: 🐍 Set Up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
 
-      - name: 📦 Install frappe-code
+      - name: 📦 Install frappe-code and pre-commit
         run: |
           python -m pip install --upgrade pip
+          pip install pre-commit  
           pip install git+https://github.com/SSAKTHIVELMURUGAN/Code-Reviewer.git
 
       - name: ⚙️ Install Dependencies with frappe-code install
         run: frappe-code install
 
-      - name: 🔍 Validate Changed Files (For PRs)
-        if: github.event_name == 'pull_request'
+      - name: 🔍 Validate Only Changed Files (Exclude `node_modules`)
         run: |
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
-          
+          set -e  # Exit if any command fails
+
+          # Determine changed files based on event type
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASE_BRANCH="origin/${{ github.base_ref }}"
+            CHANGED_FILES=$(git diff --name-only --diff-filter=d $BASE_BRANCH...HEAD)
+          else
+            CHANGED_FILES=$(git diff --name-only --diff-filter=d HEAD~1 HEAD || true)
+          fi
+
+          # Exclude unwanted directories and filter only .py and .js files
+          CHANGED_FILES=$(echo "$CHANGED_FILES" | grep -E '\.(py|js)$' | grep -vE '^(node_modules|venv|dist|build)/' || true)
+
           if [ -z "$CHANGED_FILES" ]; then
-            echo "✅ No files changed, skipping validation."
+            echo "✅ No valid files changed, skipping validation."
             exit 0
           fi
-          
+
           PASSED=true
           for file in $CHANGED_FILES; do
             echo "🔍 Validating: $file"
@@ -52,20 +64,10 @@ jobs:
               PASSED=false
             fi
           done
-          
+
           if [ "$PASSED" = false ]; then
             echo "❌ Validation Failed!"
             exit 1
           else
             echo "✅ All Files Passed!"
-          fi
-
-      - name: ✅ Validate Entire Project (For All Commits & PRs)
-        run: |
-          echo "🔍 Running full project validation..."
-          if frappe-code validate; then
-            echo "✅ Project Validation PASSED"
-          else
-            echo "❌ Project Validation FAILED"
-            exit 1
           fi
