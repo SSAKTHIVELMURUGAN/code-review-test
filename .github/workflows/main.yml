@@ -37,17 +37,27 @@ jobs:
       - name: 🔍 Validate Only Changed Files (Exclude `node_modules`)
         run: |
           set -e  # Exit if any command fails
-
+          
           # Determine changed files based on event type
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            BASE_BRANCH="origin/${{ github.base_ref }}"
-            CHANGED_FILES=$(git diff --name-only --diff-filter=d $BASE_BRANCH...HEAD)
+            # Fetch the base branch for PRs
+            git fetch origin ${{ github.base_ref }} --depth=1
+            CHANGED_FILES=$(git diff --name-only --diff-filter=d origin/${{ github.base_ref }}...HEAD)
           else
+            # Fetch the last commit for push events
             CHANGED_FILES=$(git diff --name-only --diff-filter=d HEAD~1 HEAD || true)
           fi
-
-          # Exclude unwanted directories and filter only .py and .js files
+          
+          # Print all changed files (before filtering)
+          echo "📝 Changed Files Before Filtering:"
+          echo "$CHANGED_FILES"
+          
+          # Filter only relevant file types and exclude ignored directories
           CHANGED_FILES=$(echo "$CHANGED_FILES" | grep -E '\.(py|js)$' | grep -vE '^(node_modules|venv|dist|build)/' || true)
+
+          # Print filtered files
+          echo "✅ Changed Files After Filtering (to validate):"
+          echo "$CHANGED_FILES"
 
           if [ -z "$CHANGED_FILES" ]; then
             echo "✅ No valid files changed, skipping validation."
