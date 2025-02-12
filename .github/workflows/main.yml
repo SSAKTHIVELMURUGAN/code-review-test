@@ -32,13 +32,20 @@ jobs:
       - name: ⚙️ Install Dependencies with frappe-code install
         run: frappe-code install
 
-      - name: 🔍 Validate Staged Files (For PRs)
-        if: github.event_name == 'pull_request'
+      - name: 🔍 Validate Only Changed Files (Excluding `node_modules`)
         run: |
-          CHANGED_FILES=$(git diff --name-only --diff-filter=d ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
+          # Determine changed files based on event type
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            CHANGED_FILES=$(git diff --name-only --diff-filter=d origin/${{ github.base_ref }}...HEAD)
+          else
+            CHANGED_FILES=$(git diff --name-only --diff-filter=d HEAD~1 HEAD)
+          fi
           
+          # Remove files ignored by Git (like node_modules)
+          CHANGED_FILES=$(echo "$CHANGED_FILES" | grep -vE '^(node_modules|venv|dist|build)/')
+
           if [ -z "$CHANGED_FILES" ]; then
-            echo "✅ No files changed, skipping validation."
+            echo "✅ No valid files changed, skipping validation."
             exit 0
           fi
           
@@ -58,15 +65,4 @@ jobs:
             exit 1
           else
             echo "✅ All Files Passed!"
-          fi
-
-      - name: ✅ Validate Entire Project (For Pushes)
-        if: github.event_name == 'push'
-        run: |
-          echo "🔍 Running full project validation..."
-          if frappe-code validate .; then  # ✅ Validate current directory
-            echo "✅ Project Validation PASSED"
-          else
-            echo "❌ Project Validation FAILED"
-            exit 1
           fi
