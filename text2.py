@@ -14,6 +14,7 @@ def word_count(input_text):
 # Example usage
 TEXT = "Python is great! Python is easy to learn. Python is powerful."
 result = word_count(TEXT)
+print(result)
 
 for word, count in result.items():
     print(f"{word}: {count}")
