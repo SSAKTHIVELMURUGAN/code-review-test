@@ -34,6 +34,17 @@ jobs:
       - name: ⚙️ Install Dependencies with frappe-code install
         run: frappe-code install
 
-      - name: 🔍 Validate Changed Python and JavaScript Files
+      - name: 🐛 Debug Changed Files
         run: |
-          git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '\.py$|\.js$' | xargs -I {} frappe-code validate-file {}
+          echo "Changed files:"
+          git diff --name-only ${{ github.event.before }} ${{ github.sha }}
+          echo "Filtered Python and JavaScript files:"
+          git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '\.py$|\.js$'
+
+      - name: 🔍 Validate and Print Changed Python and JavaScript Files
+        run: |
+          git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '\.py$|\.js$' | while read file; do
+            frappe-code validate-file "$file"
+            echo "Validation output for $file:"
+            cat "$file"
+          done
