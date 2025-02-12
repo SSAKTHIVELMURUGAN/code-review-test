@@ -15,10 +15,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 🚀 Checkout Code (Full History)
+      - name: 🚀 Checkout Latest Code
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Fetch full history to avoid ambiguous HEAD~1 errors
+          fetch-depth: 1  # Fetch only the latest commit
 
       - name: 🐍 Set Up Python
         uses: actions/setup-python@v4
@@ -34,17 +34,36 @@ jobs:
       - name: ⚙️ Install Dependencies with frappe-code install
         run: frappe-code install
 
-      - name: 🐛 Debug Changed Files
+      - name: 🔍 Validate Only Pushed Files
         run: |
-          echo "Changed files:"
-          git diff --name-only ${{ github.event.before }} ${{ github.sha }}
-          echo "Filtered Python and JavaScript files:"
-          git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '\.py$|\.js$'
+          set -e  # Exit if any command fails
 
-      - name: 🔍 Validate and Print Changed Python and JavaScript Files
-        run: |
-          git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '\.py$|\.js$' | while read file; do
-            frappe-code validate-file "$file"
-            echo "Validation output for $file:"
-            cat "$file"
+          # Get only the files changed in the latest push
+          CHANGED_FILES=$(git log -m -1 --name-only --pretty=format: HEAD | grep -E '\.(py|js)$' | grep -vE '^(node_modules|venv|dist|build)/' || true)
+
+          # Print changed files
+          echo "📝 Pushed Files to Validate:"
+          echo "$CHANGED_FILES"
+
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "✅ No valid files changed, skipping validation."
+            exit 0
+          fi
+
+          PASSED=true
+          for file in $CHANGED_FILES; do
+            echo "🔍 Validating: $file"
+            if frappe-code validate-file "$file"; then
+              echo "✅ $file - PASSED"
+            else
+              echo "❌ $file - FAILED"
+              PASSED=false
+            fi
           done
+
+          if [ "$PASSED" = false ]; then
+            echo "❌ Validation Failed!"
+            exit 1
+          else
+            echo "✅ All Files Passed!"
+          fi
