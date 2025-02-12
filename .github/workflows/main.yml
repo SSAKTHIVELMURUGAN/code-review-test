@@ -1,12 +1,11 @@
 name: Code Validation
 
 on:
-  push:  # Runs on every commit (push)
+  push:
     branches:
       - main
-      - dev  # Add other branches if needed
-
-  pull_request:  # Runs on every PR
+      - dev  
+  pull_request:
     branches:
       - main
       - dev
@@ -24,9 +23,10 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: 📦 Install frappe-code
+      - name: 📦 Install frappe-code and pre-commit
         run: |
           python -m pip install --upgrade pip
+          pip install pre-commit  # ✅ Manually install pre-commit
           pip install git+https://github.com/SSAKTHIVELMURUGAN/Code-Reviewer.git
 
       - name: ⚙️ Install Dependencies with frappe-code install
