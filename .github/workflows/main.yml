@@ -59,11 +59,11 @@ jobs:
             STATUS=$(echo "$OUTPUT" | grep "Overall Status" | awk '{print $NF}')
 
             if [[ "$STATUS" == "Fail" ]]; then
-              echo "❌ $file - FAILED"
+              echo "❌ $file - FAILED ❌"
               FAILED_FILES+=("$file")  # Store failed file
               PASSED=false
             else
-              echo "✅ $file - PASSED"
+              echo "✅ $file - PASSED ✅"
             fi
           done
 
@@ -71,9 +71,14 @@ jobs:
           echo "----------------------------------"
           echo "📜 Validation Summary:"
           if [ "$PASSED" = false ]; then
-            echo "❌ The following files failed validation:"
-            printf '%s\n' "${FAILED_FILES[@]}"
+            echo ""
+            echo "❌ Validation failed for the following files:"
+            for failed_file in "${FAILED_FILES[@]}"; do
+              echo "   🔴 $failed_file"
+            done
+            echo ""
+            echo "🚨 Validation check failed. Please fix the above files. 🚨"
             exit 1  # Mark the job as failed
           else
-            echo "✅ All Files Passed!"
+            echo "✅ All Files Passed! 🎉"
           fi
