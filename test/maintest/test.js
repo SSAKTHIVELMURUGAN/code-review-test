@@ -3,3 +3,5 @@ let b = 2;
 let c = a + b;
 console.log(c);
 console.log('test.js');
+
+console.log('test.js');

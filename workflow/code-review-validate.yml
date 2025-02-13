@@ -66,6 +66,6 @@ jobs:
           if frappe-code validate; then
             echo "✅ Project Validation PASSED"
           else
-            echo "❌ Project Validation FAILED"
+            echo "❌ Project Validation FAILED failed"
             exit 1
           fi

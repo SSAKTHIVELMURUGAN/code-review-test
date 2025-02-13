@@ -18,6 +18,7 @@ def EXAMPLE_FUNCTION(x: int) -> int:  # ❌ Flake8-Naming: N802 function name sh
         for _ in range(x):
             if x % 2 == 0:
                 print("Even")
+                print("Even 32")
             else:
                 print("Odd")
             if x == 10:
@@ -51,7 +52,11 @@ SELECT * FROM employees WHERE name = Alice;
 
 SELECT * FROM employees WHERE name = 'Alice' AND department = IT;  
 
-SELECT name, age customers WHERE age > 30;   """
+SELECT name, age customers WHERE age > 30;   
+
+SELECT * FROM employees WHERE department = 'HR' OR department = 'IT';
+
+SELECT * FROM employees WHERE department = 'HR' AND department = 'IT';"""
 
 print(q)
 
