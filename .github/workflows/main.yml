@@ -36,8 +36,7 @@ jobs:
 
       - name: 🔍 Validate Only Pushed Files
         run: |
-          # Get only the files changed in the latest push
-          CHANGED_FILES=$(git log -m -1 --name-only --pretty=format: HEAD | grep -E '\.(py|js)$' | grep -vE '^(node_modules|venv|dist|build)/' || true)
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '\.(py|js)$' | grep -vE '^(node_modules|venv|dist|build)/' || true)
 
           echo "📝 Pushed Files to Validate:"
           echo "$CHANGED_FILES"
@@ -48,26 +47,24 @@ jobs:
           fi
 
           PASSED=true
-          FAILED_FILES=()  # List to store failed files
+          FAILED_FILES=()
 
           for file in $CHANGED_FILES; do
             echo "🔍 Validating: $file"
-            OUTPUT=$(frappe-code validate-file "$file")  # Capture output
+            OUTPUT=$(frappe-code validate-file "$file")  
             echo "$OUTPUT"
 
-            # Extract Overall Status
             STATUS=$(echo "$OUTPUT" | grep "Overall Status" | awk '{print $NF}')
 
             if [[ "$STATUS" == "Fail" ]]; then
               echo "❌ $file - FAILED ❌"
-              FAILED_FILES+=("$file")  # Store failed file
+              FAILED_FILES+=("$file")
               PASSED=false
             else
               echo "✅ $file - PASSED ✅"
             fi
           done
 
-          # Print Summary
           echo "----------------------------------"
           echo "📜 Validation Summary:"
           if [ "$PASSED" = false ]; then
@@ -77,8 +74,14 @@ jobs:
               echo "   🔴 $failed_file"
             done
             echo ""
-            echo "🚨 Validation check failed. Please fix the above files. 🚨"
+            echo "🚨 Validation check failed. Code cannot be pushed or merged. 🚨"
             exit 1  # Mark the job as failed
           else
             echo "✅ All Files Passed! 🎉"
           fi
+
+      - name: 🚨 Prevent Merge & Push if Validation Fails
+        if: failure()
+        run: |
+          echo "❌ Validation failed. Push and merge are blocked!"
+          exit 1
