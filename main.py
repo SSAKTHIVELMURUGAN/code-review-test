@@ -2,8 +2,6 @@ import os
 import sys
 import subprocess
 
-import qrbill
-from qrbill import QRBill
 def get_files(file_path):
     print(file_path)
     check = subprocess.check_output(["python","--version"], text=True)
