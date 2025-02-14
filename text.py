@@ -3,6 +3,11 @@ import pickle  # ❌ Bandit: B301 insecure use of `pickle`
 import random  # ❌ Flake8: F401 imported but unused
 import subprocess  # ❌ Bandit: B602 shell=True detected
 
+
+def site():
+    print(TabError)
+
+    
 def EXAMPLE_FUNCTION(x: int) -> int:  # ❌ Flake8-Naming: N802 function name should be lowercase
     """
     Example function that performs calculations.
