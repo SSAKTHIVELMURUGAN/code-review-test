@@ -36,12 +36,9 @@ jobs:
 
       - name: 🔍 Validate Only Pushed Files
         run: |
-          set -e  # Exit if any command fails
-
           # Get only the files changed in the latest push
           CHANGED_FILES=$(git log -m -1 --name-only --pretty=format: HEAD | grep -E '\.(py|js)$' | grep -vE '^(node_modules|venv|dist|build)/' || true)
 
-          # Print changed files
           echo "📝 Pushed Files to Validate:"
           echo "$CHANGED_FILES"
 
@@ -51,19 +48,37 @@ jobs:
           fi
 
           PASSED=true
+          FAILED_FILES=()  # List to store failed files
+
           for file in $CHANGED_FILES; do
             echo "🔍 Validating: $file"
-            if frappe-code validate-file "$file"; then
-              echo "✅ $file - PASSED"
-            else
-              echo "❌ $file - FAILED"
+            OUTPUT=$(frappe-code validate-file "$file")  # Capture output
+            echo "$OUTPUT"
+
+            # Extract Overall Status
+            STATUS=$(echo "$OUTPUT" | grep "Overall Status" | awk '{print $NF}')
+
+            if [[ "$STATUS" == "Fail" ]]; then
+              echo "❌ $file - FAILED ❌"
+              FAILED_FILES+=("$file")  # Store failed file
               PASSED=false
+            else
+              echo "✅ $file - PASSED ✅"
             fi
           done
 
+          # Print Summary
+          echo "----------------------------------"
+          echo "📜 Validation Summary:"
           if [ "$PASSED" = false ]; then
-            echo "❌ Validation Failed!"
-            exit 1
+            echo ""
+            echo "❌ Validation failed for the following files:"
+            for failed_file in "${FAILED_FILES[@]}"; do
+              echo "   🔴 $failed_file"
+            done
+            echo ""
+            echo "🚨 Validation check failed. Please fix the above files. 🚨"
+            exit 1  # Mark the job as failed
           else
-            echo "✅ All Files Passed!"
+            echo "✅ All Files Passed! 🎉"
           fi
