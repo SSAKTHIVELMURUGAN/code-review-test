@@ -5,3 +5,11 @@ console.log(c);
 console.log('test.js');
 
 console.log('test.js');
+
+
+function test() {
+    if (b == 1) {
+        console.log('test');
+    }
+    console.log('test');
+}

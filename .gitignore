@@ -1,6 +1,31 @@
+# Byte-compiled Python files
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environment
+venv/
+env/
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+
 # Node.js dependencies
 node_modules/
 npm-debug.log
 yarn-error.log
 package-lock.json
 yarn.lock
+
+# ESLint cache and config (optional)
+.eslintcache
+eslint.config.cjs
+
+# VS Code settings (optional)
+.vscode/
+
+# Logs
+logs/
+*.log

@@ -9,3 +9,11 @@ for i in range(n):
 print("Hello World")
 
 
+
+def main():
+    for i in range(10):
+        print(i)
+
+        
+if main == "__main__":
+    main()
