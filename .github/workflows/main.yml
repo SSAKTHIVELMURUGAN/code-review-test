@@ -38,8 +38,8 @@ jobs:
         run: |
           echo "🔍 Checking for staged Python or JavaScript files..."
 
-          # Get list of staged files
-          STAGED_FILES=$(git diff --name-only --cached | grep -E '\.(py|js)$' || true)
+          # Get list of staged Python and JavaScript files
+          STAGED_FILES=$(git diff --staged --name-only)
 
           if [ -z "$STAGED_FILES" ]; then
             echo "✅ No staged Python or JavaScript files to validate. Skipping validation."
@@ -49,15 +49,39 @@ jobs:
           echo "📂 Staged files for validation:"
           echo "$STAGED_FILES"
 
-          echo "🔍 Running validation..."
-          OUTPUT=$(frappe-code validate-staged)  
-          echo "$OUTPUT"
+          # Validate each file separately
+          PASSED=true
+          FAILED_FILES=()
 
-          STATUS=$(echo "$OUTPUT" | grep "Overall Status" | awk '{print $NF}')
+          for file in $STAGED_FILES; do
+            echo "🔍 Validating: $file"
+            OUTPUT=$(frappe-code validate-file "$file")  # Validate file
+            echo "$OUTPUT"
 
-          if [[ "$STATUS" == "Fail" ]]; then
-            echo "❌ Validation failed. Push and merge are blocked! 🚨"
-            exit 1  # Mark the job as failed
+            # Check validation status
+            STATUS=$(echo "$OUTPUT" | grep "Overall Status" | awk '{print $NF}')
+
+            if [[ "$STATUS" == "Fail" ]]; then
+              echo "❌ $file - FAILED ❌"
+              FAILED_FILES+=("$file")
+              PASSED=false
+            else
+              echo "✅ $file - PASSED ✅"
+            fi
+          done
+
+          # Print summary and block merge if validation fails
+          echo "----------------------------------"
+          echo "📜 Validation Summary:"
+          if [ "$PASSED" = false ]; then
+            echo ""
+            echo "❌ Validation failed for the following files:"
+            for failed_file in "${FAILED_FILES[@]}"; do
+              echo "   🔴 $failed_file"
+            done
+            echo ""
+            echo "🚨 Validation check failed. Please fix the above files before pushing. 🚨"
+            exit 1  # Block push and merge
           else
             echo "✅ All Staged Files Passed! 🎉"
           fi
