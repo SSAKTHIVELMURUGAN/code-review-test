@@ -23,7 +23,6 @@ def EXAMPLE_FUNCTION(x: int) -> int:  # ❌ Flake8-Naming: N802 function name sh
                 print("Odd")
             if x == 10:
                 print("Special Case")  # ❌ Radon: Increased complexity
-        print("Positive")
     return x* 2  # ❌ Flake8: E225 missing whitespace around operator
 
 def _privateFunction():  # ❌ Flake8-Naming: N807 function name should not start with an underscore (unless special)

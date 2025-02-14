@@ -4,6 +4,6 @@ print(n)
 ii = 0
 
 unusfructus = 0
-print("iimprt oe`   ", ii)
+print("iimprt oe", ii)
 
 import os

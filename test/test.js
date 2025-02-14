@@ -20,6 +20,8 @@ let unusedVar = "This variable is never used";
 function test() {
     return;
     console.log("This will never run");
+    package
+    
 }
 
 // ❌ Error: eval is dangerous (no-eval)
