@@ -36,7 +36,20 @@ jobs:
 
       - name: 🔍 Validate Staged Files Before Push
         run: |
-          echo "🔍 Running validation for staged files..."
+          echo "🔍 Checking for staged Python or JavaScript files..."
+
+          # Get list of staged files
+          STAGED_FILES=$(git diff --name-only --cached | grep -E '\.(py|js)$' || true)
+
+          if [ -z "$STAGED_FILES" ]; then
+            echo "✅ No staged Python or JavaScript files to validate. Skipping validation."
+            exit 0
+          fi
+
+          echo "📂 Staged files for validation:"
+          echo "$STAGED_FILES"
+
+          echo "🔍 Running validation..."
           OUTPUT=$(frappe-code validate-staged)  
           echo "$OUTPUT"
 
