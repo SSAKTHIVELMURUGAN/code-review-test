@@ -34,54 +34,17 @@ jobs:
       - name: ⚙️ Install Dependencies with frappe-code install
         run: frappe-code install
 
-      - name: 🔍 Validate Only Pushed Files
+      - name: 🔍 Validate Staged Files Before Push
         run: |
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '\.(py|js)$' | grep -vE '^(node_modules|venv|dist|build)/' || true)
+          echo "🔍 Running validation for staged files..."
+          OUTPUT=$(frappe-code validate-staged)  
+          echo "$OUTPUT"
 
-          echo "📝 Pushed Files to Validate:"
-          echo "$CHANGED_FILES"
+          STATUS=$(echo "$OUTPUT" | grep "Overall Status" | awk '{print $NF}')
 
-          if [ -z "$CHANGED_FILES" ]; then
-            echo "✅ No valid files changed, skipping validation."
-            exit 0
-          fi
-
-          PASSED=true
-          FAILED_FILES=()
-
-          for file in $CHANGED_FILES; do
-            echo "🔍 Validating: $file"
-            OUTPUT=$(frappe-code validate-file "$file")  
-            echo "$OUTPUT"
-
-            STATUS=$(echo "$OUTPUT" | grep "Overall Status" | awk '{print $NF}')
-
-            if [[ "$STATUS" == "Fail" ]]; then
-              echo "❌ $file - FAILED ❌"
-              FAILED_FILES+=("$file")
-              PASSED=false
-            else
-              echo "✅ $file - PASSED ✅"
-            fi
-          done
-
-          echo "----------------------------------"
-          echo "📜 Validation Summary:"
-          if [ "$PASSED" = false ]; then
-            echo ""
-            echo "❌ Validation failed for the following files:"
-            for failed_file in "${FAILED_FILES[@]}"; do
-              echo "   🔴 $failed_file"
-            done
-            echo ""
-            echo "🚨 Validation check failed. Code cannot be pushed or merged. 🚨"
+          if [[ "$STATUS" == "Fail" ]]; then
+            echo "❌ Validation failed. Push and merge are blocked! 🚨"
             exit 1  # Mark the job as failed
           else
-            echo "✅ All Files Passed! 🎉"
+            echo "✅ All Staged Files Passed! 🎉"
           fi
-
-      - name: 🚨 Prevent Merge & Push if Validation Fails
-        if: failure()
-        run: |
-          echo "❌ Validation failed. Push and merge are blocked!"
-          exit 1
