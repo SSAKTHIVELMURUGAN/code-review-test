@@ -34,43 +34,40 @@ jobs:
       - name: ⚙️ Install Dependencies with frappe-code install
         run: frappe-code install
 
-      - name: 🔍 Validate Staged Files Before Push
+      - name: 🔍 Validate Only Pushed Files
         run: |
-          echo "🔍 Checking for staged Python or JavaScript files..."
+          # Get only the files changed in the latest push
+          CHANGED_FILES=$(git log -m -1 --name-only --pretty=format: HEAD | grep -E '\.(py|js)$' | grep -vE '^(node_modules|venv|dist|build)/' || true)
 
-          # Get list of staged Python and JavaScript files
-          STAGED_FILES=$(git diff --staged --name-only)
+          echo "📝 Pushed Files to Validate:"
+          echo "$CHANGED_FILES"
 
-          if [ -z "$STAGED_FILES" ]; then
-            echo "✅ No staged Python or JavaScript files to validate. Skipping validation."
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "✅ No valid files changed, skipping validation."
             exit 0
           fi
 
-          echo "📂 Staged files for validation:"
-          echo "$STAGED_FILES"
-
-          # Validate each file separately
           PASSED=true
-          FAILED_FILES=()
+          FAILED_FILES=()  # List to store failed files
 
-          for file in $STAGED_FILES; do
+          for file in $CHANGED_FILES; do
             echo "🔍 Validating: $file"
-            OUTPUT=$(frappe-code validate-file "$file")  # Validate file
+            OUTPUT=$(frappe-code validate-file "$file")  # Capture output
             echo "$OUTPUT"
 
-            # Check validation status
+            # Extract Overall Status
             STATUS=$(echo "$OUTPUT" | grep "Overall Status" | awk '{print $NF}')
 
             if [[ "$STATUS" == "Fail" ]]; then
               echo "❌ $file - FAILED ❌"
-              FAILED_FILES+=("$file")
+              FAILED_FILES+=("$file")  # Store failed file
               PASSED=false
             else
               echo "✅ $file - PASSED ✅"
             fi
           done
 
-          # Print summary and block merge if validation fails
+          # Print Summary
           echo "----------------------------------"
           echo "📜 Validation Summary:"
           if [ "$PASSED" = false ]; then
@@ -80,8 +77,8 @@ jobs:
               echo "   🔴 $failed_file"
             done
             echo ""
-            echo "🚨 Validation check failed. Please fix the above files before pushing. 🚨"
-            exit 1  # Block push and merge
+            echo "🚨 Validation check failed. Please fix the above files. 🚨"
+            exit 1  # Mark the job as failed → This blocks merge/push if branch protection is enabled
           else
-            echo "✅ All Staged Files Passed! 🎉"
+            echo "✅ All Files Passed! 🎉"
           fi
