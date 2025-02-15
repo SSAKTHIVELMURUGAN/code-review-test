@@ -14,3 +14,7 @@ if __name__ == "__main__":
     get_files("src/main.py")
     get_files("my_code_validator/cli.py")
     get_files("my_code_validator/commands/validate_project.py")
+
+    get_files("my_code_validator/commands/validate_project.py")
+
+    get_files("my_code_validator/commands/validate_file.py")

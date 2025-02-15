@@ -6,7 +6,7 @@ import subprocess  # ❌ Bandit: B602 shell=True detected
 
 def site():
     print(TabError)
-
+    print(SyntaxError)
     
 def EXAMPLE_FUNCTION(x: int) -> int:  # ❌ Flake8-Naming: N802 function name should be lowercase
     """

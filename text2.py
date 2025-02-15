@@ -5,7 +5,6 @@ def word_count(input_text):
     words = input_text.lower().split()
     word_freq = {}
 
-    print(words)
     for w in words:
         w = w.strip(".,!?()[]{}\"'")  # Remove punctuation
         word_freq[w] = word_freq.get(w, 0) + 1
