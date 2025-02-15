@@ -45,7 +45,7 @@ if __name__=="__main__":  # ❌ Flake8: E225 missing whitespace
 
 
 q = """SELECT * FROM users WHERE name LIKE '%John AND age = 25; 
-
+select * from users where name = 'John';
 UPDATE users SET password = 'newpassword' WHERE id = 1  
 DELETE FROM orders WHERE name LIKE '%Smith;  
 
