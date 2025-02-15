@@ -37,7 +37,8 @@ jobs:
       - name: 🔍 Validate Only Pushed Files
         run: |
           # Get only the files changed in the latest push
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.after }} | grep -E '\.(py|js)$' | grep -vE '^(node_modules|venv|dist|build)/' || true)
+          CHANGED_FILES=$(git log -m -1 --name-only --pretty=format: HEAD | grep -E '\.(py|js)$' | grep -vE '^(node_modules|venv|dist|build)/' || true)
+
           echo "📝 Pushed Files to Validate:"
           echo "$CHANGED_FILES"
 
@@ -77,7 +78,7 @@ jobs:
             done
             echo ""
             echo "🚨 Validation check failed. Please fix the above files. 🚨"
-            exit 1  # Mark the job as failed → This blocks merge/push if branch protection is enabled
+            exit 1  # Mark the job as failed
           else
             echo "✅ All Files Passed! 🎉"
           fi
