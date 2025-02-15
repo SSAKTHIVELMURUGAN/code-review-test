@@ -2,6 +2,10 @@ import os
 import sys
 import subprocess
 def get_files(file_path):
+
+    print(os.path.abspath(file_path))
+
+    
     print(file_path)
     check = subprocess.check_output(["python","--version"], text=True)
     check_path = os.path.exists(file_path)
