@@ -37,7 +37,7 @@ jobs:
       - name: 🔍 Validate Only Pushed Files
         run: |
           # Get only the files changed in the latest push
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }})
+          CHANGED_FILES=git diff --name-only ${{ github.event.before }} ${{ github.event.after }}
 
           echo "📝 Pushed Files to Validate:"
           echo "$CHANGED_FILES"
